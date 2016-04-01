@@ -22,10 +22,10 @@ class UnrarUtil:
     self.outputName = outputName
 
     if dir is None:
-      dir = "/home4/wind/files/tv/ready/"
+      dir = os.environ['TV_READY_DIR']
     self.dir = dir
 
-    self.tempRootPath = "/home4/wind/files/tv/temp/"
+    self.tempRootPath = os.environ['TV_TEMP_DIR']
 
     if self.debug == True:
       print ("Initialization: InputRar = %s" % inputRar)
