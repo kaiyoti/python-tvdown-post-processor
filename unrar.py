@@ -93,8 +93,6 @@ class UnrarUtil:
     print('Executing command: {}'.format(command))
     os.system(command)
 
-    # Archive(self.inputRar).extractall(tempPath)
-
     # Search for video file
     videoFile = self.searchVideoFile(tempPath)
     if videoFile is None:
@@ -110,15 +108,6 @@ class UnrarUtil:
 
   def searchVideoFile(self, tempPath=None):
     # Try to search mp4, mkv, or avi file
-    # sizeLimitArg = ' -sm' + str(self.extractSizeLimit)
-
-    # command = 'unrar lb{} "{}"'.format(sizeLimitArg, self.inputRar)
-    #  Quick check to see we have at least a file from the source archive
-    # p = os.popen(command, "r")
-    # print "Rar contents larger minimum required size: "
-    # for line in p:
-    #   print "\t" + line
-
     command = 'find {} -name "*.mp4" -o -name "*.mkv" -o -name "*.avi"'.format(tempPath)
     p = os.popen(command, "r")
     find_result = p.readline()
