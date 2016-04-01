@@ -10,7 +10,6 @@ from pyunpack import Archive
 
 class UnrarUtil:
   extractSizeLimit = 60000000
-  findRar = False
 
   def __init__ (self, inputRar=None, outputName=None, dir=None):
     self.logging = False
