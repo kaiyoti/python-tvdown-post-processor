@@ -78,7 +78,7 @@ class UnrarUtil:
     find_result = output.readline().rstrip('\n')
     if not find_result:
       # No valid rar file, try to search for video file
-      print("No valid rar archive found in the diretory")
+      print("No valid rar archive found in the directory")
       find_result = self.searchVideoFile(self.inputFile)
       if not find_result:
         # Really tried and found nothing, time to quit
@@ -129,6 +129,7 @@ class UnrarUtil:
   def searchVideoFile(self, tempPath=None):
     # Try to search mp4, mkv, or avi file
     command = 'find {} -name "*.mp4" -o -name "*.mkv" -o -name "*.avi"'.format(tempPath)
+    print command
     p = os.popen(command, "r")
     find_result = p.readline()
     sys.stdout.write('Video result: {}'.format(find_result))
