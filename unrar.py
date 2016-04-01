@@ -151,7 +151,7 @@ class UnrarUtil:
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Utility to unrar a file, search and rename a video file')
-  parser.add_argument('input', help='Input rar file name or dir', required=True)
+  parser.add_argument('input', help='Input rar file name or dir')
   parser.add_argument('-o','--output', help='Video file name of the result file', required=False)
   parser.add_argument('-d','--dir', help='Resulting directory where video will copied to', required=False)
   parser.add_argument('-l','--log', help='Log file to log output to', required=False)
