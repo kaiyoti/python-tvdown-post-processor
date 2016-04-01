@@ -12,15 +12,17 @@ class UnrarUtil:
   # This prevents sample files from being extracted with a limite
   # that all files must be greater than 60 mb to be extracted
   extractSizeLimit = 60000000
-
-  def __init__ (self, inputRar=None, outputName=None, dir=None):
+  isArchive = True
+  isSeeding = True
+  
+  def __init__ (self, inputFile=None, outputName=None, dir=None):
     self.logging = False
     self.debug = False
 
-    if inputRar is None:
-      sys.exit("Error: Inputrar file/folder needs to be specified!");
+    if inputFile is None:
+      sys.exit("Error: inputFile file/folder needs to be specified!");
 
-    self.inputRar = inputRar
+    self.inputFile = inputFile
     self.outputName = outputName
 
     if dir is None:
@@ -32,11 +34,11 @@ class UnrarUtil:
 
     temp_dir = os.environ.get('TV_TEMP_DIR')
     if temp_dir is None:
-      temp_dir = "/temp/"
+      temp_dir = os.environ.get('HOME') + "/tmp/"
     self.tempRootPath = temp_dir
 
     if self.debug == True:
-      print ("Initialization: InputRar = %s" % inputRar)
+      print ("Initialization: inputFile = %s" % inputFile)
       print ("Initialization: OutputName = %s" % outputName)
 
   def enableLogging(self, logFile=None):
@@ -50,16 +52,20 @@ class UnrarUtil:
 
   def validateInputs(self):
     # Check if input file exists
-    if os.path.isfile(self.inputRar) == False:
-      if os.path.isdir(self.inputRar) == True:
-        self.inputRar = self.searchForRarFile()
+    if os.path.isfile(self.inputFile) == False:
+      if os.path.isdir(self.inputFile) == True:
+        self.inputFile = self.searchForRarFile()
       else:
-        sys.exit("No valid rar archive or directory specified")
+        sys.exit("No valid archive, video, or directory specified")
+
+    # See if we are seeding
+    if "/seed/" not in self.inputFile:
+      isSeeding = False
 
     # Check if the output file name is empty or does not contain "---"
     if self.outputName is None or "---" not in self.outputName:
       print ('"%s" is empty or does not contain valid name, attempting to use directory name' % self.outputName)
-      name_search = self.inputRar.split("[-]")
+      name_search = self.inputFile.split("[-]")
       if len(name_search) < 3:
         print ('No valid name found in the directory path... please specify a valid output filename')
       else:
@@ -67,11 +73,18 @@ class UnrarUtil:
         self.outputName = name_search[1]
 
   def searchForRarFile(self):
-    command='find "{}" -regextype posix-extended -regex "^.*\.part(0)*1\.rar"'.format(self.inputRar)
+    command='find "{}" -regextype posix-extended -regex "^.*\.part(0)*1\.rar"'.format(self.inputFile)
     output = os.popen(command, "r")
     find_result = output.readline().rstrip('\n')
     if not find_result:
-      sys.exit("No valid rar archive found in the diretory")
+      # No valid rar file, try to search for video file
+      print("No valid rar archive found in the diretory")
+      find_result = self.searchVideoFile(self.inputFile)
+      if not find_result:
+        # Really tried and found nothing, time to quit
+        sys.exit("Input directory contains no video content, existing...")
+      else:
+        self.isArchive = False
 
     return find_result
 
@@ -96,7 +109,7 @@ class UnrarUtil:
     sizeLimitArg = ' -sm' + str(self.extractSizeLimit)
 
     # Using the nix command line unrar because it's more flexible (IMO)
-    command = 'unrar x{}{} "{}" {}'.format(hideRarOutputArg, sizeLimitArg, self.inputRar, tempPath)
+    command = 'unrar x{}{} "{}" {}'.format(hideRarOutputArg, sizeLimitArg, self.inputFile, tempPath)
     print('Executing command: {}'.format(command))
     os.system(command)
 
@@ -109,7 +122,7 @@ class UnrarUtil:
     return videoFile
 
   def dumpRarContents(self):
-    command = 'unrar l "{}"'.format(self.inputRar)
+    command = 'unrar l "{}"'.format(self.inputFile)
     print("Dumping rar file contents: ")
     os.system(command)
 
@@ -123,12 +136,16 @@ class UnrarUtil:
     # strip new line character when returning
     return find_result.rstrip('\n')
 
-  def moveVideoToTargetDir(self, videoPath):
+  def moveVideoToTargetDir(self, videoPath, copy=False):
     # Check if file already exists at the target directory
     filename, file_extension = os.path.splitext(videoPath)
     target_filename = '{}{}{}'.format(self.dir, self.outputName, file_extension)
     print 'Target filename: "{}"'.format(target_filename)
-    shutil.move(videoPath, target_filename)
+
+    if copy == False:
+      shutil.move(videoPath, target_filename)
+    else:
+      shutil.copy(videoPath, target_filename)
 
   def deleteTempDir(self, tempPath=None):
     if tempPath is not None and os.path.exists(tempPath):
@@ -139,19 +156,22 @@ class UnrarUtil:
     # Validate our inputs
     self.validateInputs()
 
-    # Create a temp path
-    tempPath = self.getOrCreateTempDir()
+    if self.isArchive == True:
+      # Create a temp path
+      tempPath = self.getOrCreateTempDir()
 
-    # All Set! Time to perform extraction
-    videoFile = self.extractFile(tempPath)
-    self.moveVideoToTargetDir(videoFile)
+      # All Set! Time to perform extraction
+      videoFile = self.extractFile(tempPath)
+      self.moveVideoToTargetDir(videoFile, False)
 
-    # Clean up the temporary directory
-    self.deleteTempDir(tempPath)
+      # Clean up the temporary directory
+      self.deleteTempDir(tempPath)
+    else:
+      self.moveVideoToTargetDir(self.inputFile, self.isSeeding)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Utility to unrar a file, search and rename a video file')
-  parser.add_argument('input', help='Input rar file name or dir')
+  parser.add_argument('input', help='Input rar/video file name or dir')
   parser.add_argument('-o', '--output', help='Video file name of the result file', required=False)
   parser.add_argument('-d', '--dir', help='Resulting directory where video will copied to', required=False)
   parser.add_argument('-l', '--log', help='Log file to log output to', required=False)
