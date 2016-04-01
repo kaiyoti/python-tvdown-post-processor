@@ -1,3 +1,4 @@
+#!/home4/wind/penv/bin/python
 import argparse
 import sys
 import logging
@@ -14,6 +15,7 @@ class PostTVProcessor:
   extractSizeLimit = 60000000
   isArchive = True
   isSeeding = True
+  isTest = False
 
   def __init__ (self, inputFile=None, outputName=None, dir=None, logFile=None):
     if inputFile is None:
@@ -36,9 +38,9 @@ class PostTVProcessor:
       temp_dir = os.environ.get('HOME') + "/tmp/"
     self.tempRootPath = temp_dir
 
-    setupLogger()
+    self.setupLogger(logFile)
 
-  def setupLogger(self):
+  def setupLogger(self, logFile=None):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -156,12 +158,13 @@ class PostTVProcessor:
     target_filename = '{}{}{}'.format(self.dir, self.outputName, file_extension)
     logging.info('Target filename: "{}"'.format(target_filename))
 
-    if copy == False:
-      logging.info("Moving...")
-      shutil.move(videoPath, target_filename)
-    else:
-      logging.info("Copying...")
-      shutil.copy(videoPath, target_filename)
+    if self.isTest == False:
+      if copy == False:
+        logging.info("Moving...")
+        shutil.move(videoPath, target_filename)
+      else:
+        logging.info("Copying...")
+        shutil.copy(videoPath, target_filename)
 
   def deleteTempDir(self, tempPath=None):
     if tempPath is not None and os.path.exists(tempPath):
@@ -169,7 +172,7 @@ class PostTVProcessor:
       shutil.rmtree(tempPath)
 
   def process(self):
-    logger.info("----- Processing Start -----")
+    logging.info("----- Processing Start -----")
 
     # Validate our inputs
     self.validateInputs()
@@ -187,7 +190,7 @@ class PostTVProcessor:
     else:
       self.moveVideoToTargetDir(self.inputFile, self.isSeeding)
 
-    logger.info("----- Processing Complete -----\n")
+    logging.info("----- Processing Complete -----\n")
 
 if __name__ == '__main__':
 
