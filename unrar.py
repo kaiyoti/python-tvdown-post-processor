@@ -14,7 +14,7 @@ class UnrarUtil:
   extractSizeLimit = 60000000
   isArchive = True
   isSeeding = True
-  
+
   def __init__ (self, inputFile=None, outputName=None, dir=None):
     self.logging = False
     self.debug = False
@@ -77,14 +77,19 @@ class UnrarUtil:
     output = os.popen(command, "r")
     find_result = output.readline().rstrip('\n')
     if not find_result:
-      # No valid rar file, try to search for video file
-      print("No valid rar archive found in the directory")
-      find_result = self.searchVideoFile(self.inputFile)
+      # It may not have a part number, retry search without parts
+      command='find "{}" -regextype posix-extended -regex "^.*\.rar"'.format(self.inputFile)
+      output = os.popen(command, "r")
+      find_result = output.readline().rstrip('\n')
       if not find_result:
-        # Really tried and found nothing, time to quit
-        sys.exit("Input directory contains no video content, existing...")
-      else:
-        self.isArchive = False
+        # No valid rar file at all, try to search for video file instead
+        print("No valid rar archive found in the directory")
+        find_result = self.searchVideoFile(self.inputFile)
+        if not find_result:
+          # Time to give up
+          sys.exit("Input directory contains no video content, existing...")
+        else:
+          self.isArchive = False
 
     return find_result
 
@@ -170,6 +175,9 @@ class UnrarUtil:
       self.moveVideoToTargetDir(self.inputFile, self.isSeeding)
 
 if __name__ == '__main__':
+
+  # Check if we have environment variables, otherwise read from argument params
+
   parser = argparse.ArgumentParser(description='Utility to unrar a file, search and rename a video file')
   parser.add_argument('input', help='Input rar/video file name or dir')
   parser.add_argument('-o', '--output', help='Video file name of the result file', required=False)
