@@ -214,7 +214,7 @@ if __name__ == '__main__':
     if args.log is not None:
       log_file = args.log
 
-  # Create instance of unrar util
+  # Create instance of Post Tv Processing Util
   PostTVProcessor = PostTVProcessor(input_path, output_name, ready_dir, log_file)
 
   # Process the rar file
