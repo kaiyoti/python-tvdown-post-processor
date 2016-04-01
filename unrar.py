@@ -9,6 +9,8 @@ import os
 from pyunpack import Archive
 
 class UnrarUtil:
+  # This prevents sample files from being extracted with a limite
+  # that all files must be greater than 60 mb to be extracted
   extractSizeLimit = 60000000
 
   def __init__ (self, inputRar=None, outputName=None, dir=None):
