@@ -24,10 +24,16 @@ class UnrarUtil:
     self.outputName = outputName
 
     if dir is None:
-      dir = os.environ['TV_READY_DIR']
-    self.dir = dir
+      ready_dir = os.environ.get('TV_READY_DIR')
+      if ready_dir is None:
+        sys.exit("Output directory not defined AND TV_READY_DIR environment variable not set")
+      
+    self.dir = ready_dir
 
-    self.tempRootPath = os.environ['TV_TEMP_DIR']
+    temp_dir = os.environ.get('TV_TEMP_DIR')
+    if temp_dir is None:
+      temp_dir = "/temp/"
+    self.tempRootPath = temp_dir
 
     if self.debug == True:
       print ("Initialization: InputRar = %s" % inputRar)
