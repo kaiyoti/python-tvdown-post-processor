@@ -8,7 +8,7 @@ import shutil
 import os
 from pyunpack import Archive
 
-class UnrarUtil:
+class PostTVProcessor:
   # This prevents sample files from being extracted with a limite
   # that all files must be greater than 60 mb to be extracted
   extractSizeLimit = 60000000
@@ -16,18 +16,6 @@ class UnrarUtil:
   isSeeding = True
 
   def __init__ (self, inputFile=None, outputName=None, dir=None, logFile=None):
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    root = logging.getLogger()
-    root.setLevel(logging.INFO)
-    fh = logging.FileHandler(logFile)
-    fh.setLevel(logging.INFO)
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(formatter)
-    fh.setFormatter(formatter)
-    root.addHandler(ch)
-    root.addHandler(fh)
-
     if inputFile is None:
       logging.error("Error: inputFile file/folder needs to be specified!")
       sys.exit()
@@ -48,9 +36,24 @@ class UnrarUtil:
       temp_dir = os.environ.get('HOME') + "/tmp/"
     self.tempRootPath = temp_dir
 
+    setupLogger()
+
+  def setupLogger(self):
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    fh = logging.FileHandler(logFile)
+    fh.setLevel(logging.INFO)
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+    root.addHandler(ch)
+    root.addHandler(fh)
+
   def validateInputs(self):
     # Check if input file exists
-    logging.info("File: {}".format(self.inputFile))
+    logging.info("Input: {}".format(self.inputFile))
 
     if os.path.isfile(self.inputFile) == False:
       if os.path.isdir(self.inputFile) == True:
@@ -70,7 +73,7 @@ class UnrarUtil:
       if len(name_search) < 3:
         logging.error('No valid name found in the directory path... please specify a valid output filename')
       else:
-        logging.info('"{}}" will be used as the target filename'.format(name_search[1]))
+        logging.info('"{}" will be used as the target filename'.format(name_search[1]))
         self.outputName = name_search[1]
 
   def searchForRarFile(self):
@@ -166,6 +169,8 @@ class UnrarUtil:
       shutil.rmtree(tempPath)
 
   def process(self):
+    logger.info("----- Processing Start -----")
+
     # Validate our inputs
     self.validateInputs()
 
@@ -181,6 +186,8 @@ class UnrarUtil:
       self.deleteTempDir(tempPath)
     else:
       self.moveVideoToTargetDir(self.inputFile, self.isSeeding)
+
+    logger.info("----- Processing Complete -----\n")
 
 if __name__ == '__main__':
 
@@ -205,7 +212,7 @@ if __name__ == '__main__':
       log_file = args.log
 
   # Create instance of unrar util
-  unrarUtil = UnrarUtil(input_path, output_name, ready_dir, log_file)
+  PostTVProcessor = PostTVProcessor(input_path, output_name, ready_dir, log_file)
 
   # Process the rar file
-  unrarUtil.process()
+  PostTVProcessor.process()
