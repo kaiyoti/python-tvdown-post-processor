@@ -16,7 +16,17 @@ class UnrarUtil:
   isSeeding = True
 
   def __init__ (self, inputFile=None, outputName=None, dir=None, logFile=None):
-    logging.basicConfig(filename=logFile, level=logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    fh = logging.FileHandler(logFile)
+    fh.setLevel(logging.INFO)
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+    root.addHandler(ch)
+    root.addHandler(fh)
 
     if inputFile is None:
       logging.error("Error: inputFile file/folder needs to be specified!")
@@ -40,6 +50,8 @@ class UnrarUtil:
 
   def validateInputs(self):
     # Check if input file exists
+    logging.info("File: {}".format(self.inputFile))
+
     if os.path.isfile(self.inputFile) == False:
       if os.path.isdir(self.inputFile) == True:
         self.inputFile = self.searchForRarFile()
@@ -53,12 +65,12 @@ class UnrarUtil:
 
     # Check if the output file name is empty or does not contain "---"
     if self.outputName is None or "---" not in self.outputName:
-      logging.warning('Output target name is empty or does not contain valid name, attempting to use directory name' % self.outputName)
+      logging.warning('Output target name is empty or does not contain valid name, attempting to use directory name')
       name_search = self.inputFile.split("[-]")
       if len(name_search) < 3:
         logging.error('No valid name found in the directory path... please specify a valid output filename')
       else:
-        logging.info('"%s" will be used as the target filename' % name_search[1])
+        logging.info('"{}}" will be used as the target filename'.format(name_search[1]))
         self.outputName = name_search[1]
 
   def searchForRarFile(self):
@@ -88,7 +100,7 @@ class UnrarUtil:
     millis = int(round(time.time() * 1000))
     clean_name = re.sub(r'[^\w]', '', self.outputName)
     temp_full_path = self.tempRootPath + str(millis) + clean_name
-    loggin.info('Creating temporary directory: {}'.format(temp_full_path))
+    logging.info('Creating temporary directory: {}'.format(temp_full_path))
     if not os.path.exists(temp_full_path):
       os.makedirs(temp_full_path)
     return temp_full_path
@@ -129,11 +141,11 @@ class UnrarUtil:
     # Try to search mp4, mkv, or avi file
     command = 'find "{}" -name "*.mp4" -o -name "*.mkv" -o -name "*.avi"'.format(tempPath)
     p = os.popen(command, "r")
-    find_result = p.readline()
+    find_result = p.readline().rstrip('\n')
     logging.info('Video result: {}'.format(find_result))
 
     # strip new line character when returning
-    return find_result.rstrip('\n')
+    return find_result
 
   def moveVideoToTargetDir(self, videoPath, copy=False):
     # Check if file already exists at the target directory
@@ -178,7 +190,7 @@ if __name__ == '__main__':
   ready_dir = None
   log_file = os.environ.get("TV_LOG_FILE")
 
-  if torrent_dir is None:
+  if input_path is None:
     parser = argparse.ArgumentParser(description='Utility to unrar a file, search and rename a video file')
     parser.add_argument('input', help='Input rar/video file name or dir')
     parser.add_argument('-o', '--output', help='Video file name of the result file', required=False)
