@@ -129,7 +129,6 @@ class UnrarUtil:
   def searchVideoFile(self, tempPath=None):
     # Try to search mp4, mkv, or avi file
     command = 'find "{}" -name "*.mp4" -o -name "*.mkv" -o -name "*.avi"'.format(tempPath)
-    print command
     p = os.popen(command, "r")
     find_result = p.readline()
     sys.stdout.write('Video result: {}'.format(find_result))
