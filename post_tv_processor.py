@@ -30,7 +30,7 @@ class PostTVProcessor:
       if ready_dir is None:
         logging.error("Output directory not defined AND TV_READY_DIR environment variable not set")
         sys.exit()
-      
+
     self.dir = ready_dir
 
     temp_dir = os.environ.get('TV_TEMP_DIR')
@@ -57,12 +57,16 @@ class PostTVProcessor:
     # Check if input file exists
     logging.info("Input: {}".format(self.inputFile))
 
-    if os.path.isfile(self.inputFile) == False:
-      if os.path.isdir(self.inputFile) == True:
-        self.inputFile = self.searchForRarFile()
-      else:
-        logging.error("No valid archive, video, or directory specified")
-        sys.exit()        
+    # If the input file is already media content, don't need to search
+    if self.inputFile.endswith(('.mp4', '.avi', '.mkv')):
+      self.isArchive = False
+    else:
+      if os.path.isfile(self.inputFile) == False:
+        if os.path.isdir(self.inputFile) == True:
+          self.inputFile = self.searchForRarFile()
+        else:
+          logging.error("No valid archive, video, or directory specified")
+          sys.exit()
 
     # See if we are seeding
     if "/seed/" not in self.inputFile:
@@ -164,7 +168,9 @@ class PostTVProcessor:
         shutil.move(videoPath, target_filename)
       else:
         logging.info("Copying...")
-        shutil.copy(videoPath, target_filename)
+        videoPathClone = videoPath + ".copy"
+        shutil.copy(videoPath, videoPathClone)
+        shutil.move(videoPathClone, target_filename)
 
   def deleteTempDir(self, tempPath=None):
     if tempPath is not None and os.path.exists(tempPath):
@@ -195,26 +201,23 @@ class PostTVProcessor:
 if __name__ == '__main__':
 
   # Check if we have environment variables, otherwise read from argument params
-  input_path = os.environ.get('TR_TORRENT_DIR')
-  output_name = None
-  ready_dir = None
   log_file = os.environ.get("TV_LOG_FILE")
 
-  if input_path is None:
-    parser = argparse.ArgumentParser(description='Utility to unrar a file, search and rename a video file')
-    parser.add_argument('input', help='Input rar/video file name or dir')
-    parser.add_argument('-o', '--output', help='Video file name of the result file', required=False)
-    parser.add_argument('-d', '--dir', help='Resulting directory where video will copied to', required=False)
-    parser.add_argument('-l', '--log', help='Log file to log output to', required=False)
-    args = parser.parse_args()
-    input_path = args.input
-    output_name = args.output
-    ready_dir = args.dir
+  parser = argparse.ArgumentParser(description='Utility to unrar a file, search and rename a video file')
+  parser.add_argument('input', help='Input rar/video file name or dir')
+  parser.add_argument('-o', '--output', help='Video file name of the result file', required=False)
+  parser.add_argument('-d', '--dir', help='Resulting directory where video will copied to', required=False)
+  parser.add_argument('-l', '--log', help='Log file to log output to', required=False)
 
-    if args.log is not None:
-      log_file = args.log
+  args = parser.parse_args()
+  input_path = args.input
+  output_name = args.output
+  ready_dir = args.dir
 
-  # Create instance of Post Tv Processing Util
+  if args.log is not None:
+    log_file = args.log
+
+  # Create instance of unrar util
   PostTVProcessor = PostTVProcessor(input_path, output_name, ready_dir, log_file)
 
   # Process the rar file
