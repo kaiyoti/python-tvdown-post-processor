@@ -59,7 +59,7 @@ class PostTVProcessor:
     root.addHandler(ch)
     root.addHandler(fh)
 
-    syslog = SysLogHandler(address=('logs4.papertrailapp.com', 38498))
+    syslog = SysLogHandler(address=(os.environ.get('TV_PAPER_TRAIL_HOST'), os.environ.get('TV_PAPER_TRAIL_PORT')))
     formatter = logging.Formatter('%(asctime)s %(hostname)s tv: %(message)s', datefmt='%b %d %H:%M:%S')
     syslog.setFormatter(formatter)
     root.addHandler(syslog)
