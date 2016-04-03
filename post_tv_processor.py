@@ -8,6 +8,7 @@ import re
 import shutil
 import os
 from pyunpack import Archive
+from logging.handlers import SysLogHandler
 
 class PostTVProcessor:
   # This prevents sample files from being extracted with a limite
