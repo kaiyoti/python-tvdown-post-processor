@@ -19,7 +19,7 @@ class PostTVProcessor:
 
   def __init__ (self, inputFile=None, outputName=None, dir=None, logFile=None):
     if inputFile is None:
-      logging.error("Error: inputFile file/folder needs to be specified!")
+      logging.error("Error: inputFile file/folder needs to be specified!\n")
       sys.exit()
 
     self.inputFile = inputFile
@@ -28,7 +28,7 @@ class PostTVProcessor:
     if dir is None:
       ready_dir = os.environ.get('TV_READY_DIR')
       if ready_dir is None:
-        logging.error("Output directory not defined AND TV_READY_DIR environment variable not set")
+        logging.error("Output directory not defined AND TV_READY_DIR environment variable not set\n")
         sys.exit()
 
     self.dir = ready_dir
@@ -65,7 +65,7 @@ class PostTVProcessor:
         if os.path.isdir(self.inputFile) == True:
           self.inputFile = self.searchForRarFile()
         else:
-          logging.error("No valid archive, video, or directory specified")
+          logging.error("No valid archive, video, or directory specified\n")
           sys.exit()
 
     # See if we are seeding
@@ -97,7 +97,7 @@ class PostTVProcessor:
         find_result = self.searchVideoFile(self.inputFile)
         if not find_result:
           # Time to give up
-          logging.error("Input directory contains no video content, existing...")
+          logging.error("Input directory contains no video content, existing...\n")
           sys.exit()
         else:
           self.isArchive = False
@@ -116,7 +116,7 @@ class PostTVProcessor:
 
   def extractFile(self, tempPath=None):
     if tempPath is None:
-      logging.error('You must specify a path for extracting to temp location')
+      logging.error('You must specify a path for extracting to temp location\n')
       sys.exit()
 
     # Hide all the rar extraction output
