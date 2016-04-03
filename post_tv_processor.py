@@ -41,7 +41,7 @@ class PostTVProcessor:
     self.setupLogger(logFile)
 
   def setupLogger(self, logFile=None):
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(message)s')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     root = logging.getLogger()
     root.setLevel(logging.INFO)
     fh = logging.FileHandler(logFile)
