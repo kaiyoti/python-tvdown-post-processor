@@ -7,6 +7,7 @@ import time
 import re
 import shutil
 import os
+import time
 from pyunpack import Archive
 from logging.handlers import SysLogHandler
 
@@ -20,18 +21,22 @@ class PostTVProcessor:
 
   def __init__ (self, inputFile=None, outputName=None, dir=None, logFile=None):
     if inputFile is None:
-      logging.error("Error: inputFile file/folder needs to be specified!\n")
+      logging.error("Error: inputFile file/folder needs to be specified!")
       sys.exit()
 
     self.inputFile = inputFile
     self.outputName = outputName
 
+    isTest = os.environ.get('TV_POST_TEST')
+    if isTest is not None:
+      self.isTest = True
+
     if dir is None:
       ready_dir = os.environ.get('TV_READY_DIR')
       if ready_dir is None:
-        logging.error("Output directory not defined AND TV_READY_DIR environment variable not set\n")
+        logging.error("Output directory not defined AND TV_READY_DIR environment variable not set")
         sys.exit()
-
+      
     self.dir = ready_dir
 
     temp_dir = os.environ.get('TV_TEMP_DIR')
@@ -54,6 +59,15 @@ class PostTVProcessor:
     root.addHandler(ch)
     root.addHandler(fh)
 
+    syslog = SysLogHandler(address=('logs4.papertrailapp.com', 38498))
+    formatter = logging.Formatter('%(asctime)s %(hostname)s tv: %(message)s', datefmt='%b %d %H:%M:%S')
+    syslog.setFormatter(formatter)
+    root.addHandler(syslog)
+
+    f = ContextFilter()
+    root.addFilter(f)
+
+
   def validateInputs(self):
     # Check if input file exists
     logging.info("Input: {}".format(self.inputFile))
@@ -66,8 +80,8 @@ class PostTVProcessor:
         if os.path.isdir(self.inputFile) == True:
           self.inputFile = self.searchForRarFile()
         else:
-          logging.error("No valid archive, video, or directory specified\n")
-          sys.exit()
+          logging.error("No valid archive, video, or directory specified")
+          sys.exit()        
 
     # See if we are seeding
     if "/seed/" not in self.inputFile:
@@ -98,7 +112,7 @@ class PostTVProcessor:
         find_result = self.searchVideoFile(self.inputFile)
         if not find_result:
           # Time to give up
-          logging.error("Input directory contains no video content, existing...\n")
+          logging.error("Input directory contains no video content, existing...")
           sys.exit()
         else:
           self.isArchive = False
@@ -117,7 +131,7 @@ class PostTVProcessor:
 
   def extractFile(self, tempPath=None):
     if tempPath is None:
-      logging.error('You must specify a path for extracting to temp location\n')
+      logging.error('You must specify a path for extracting to temp location')
       sys.exit()
 
     # Hide all the rar extraction output
@@ -198,6 +212,13 @@ class PostTVProcessor:
       self.moveVideoToTargetDir(self.inputFile, self.isSeeding)
 
     logging.info("----- Processing Complete -----\n")
+
+class ContextFilter(logging.Filter):
+  hostname = "WindServer"
+
+  def filter(self, record):
+    record.hostname = ContextFilter.hostname
+    return True
 
 if __name__ == '__main__':
 
